@@ -55,7 +55,7 @@ class MovingAverageSimplev2(btind.MovingAverageBase):
 
     def next(self):
         print(len(self.data.lines[0]))
-        self.lines[1] = len(self.data.lines[0])
+        self.lines[1] = bt.Max(0,len(self.data.lines[0]))
 
 
 
@@ -81,7 +81,7 @@ class TestStrategy(bt.Strategy):
         # Simply log the closing price of the series from the reference
         #print(self.env.indicators.SSLChanelIndicatorv2)
         self.log('Close, %.2f' % self.dataclose[0])
-        print(self.sma1)
+        print(self..sma1sx)
 
 if __name__ == '__main__':
     # Create a cerebro entity
