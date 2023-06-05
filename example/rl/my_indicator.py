@@ -81,7 +81,7 @@ class TestStrategy(bt.Strategy):
         # Simply log the closing price of the series from the reference
         #print(self.env.indicators.SSLChanelIndicatorv2)
         self.log('Close, %.2f' % self.dataclose[0])
-        print(self..sma1sx)
+        print(self.sma1sx)
 
 if __name__ == '__main__':
     # Create a cerebro entity

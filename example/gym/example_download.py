@@ -11,9 +11,9 @@ EXCHANGE_LIMIT_RATES["bybit"] = {
     "pause" : 2, # the pause will last 1 second
 }
 download(
-    exchange_names = ["bybit"],
-    symbols= ["BTC/USDT", "ETH/USDT"],
+    exchange_names = ["binance"],
+    symbols= ["BTC/USDT"],
     timeframe= "1h",
-    dir = "examples/data",
+    dir = "data",
     since= datetime.datetime(year= 2023, month= 1, day=1),
 )
