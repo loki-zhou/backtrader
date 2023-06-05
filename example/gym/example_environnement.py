@@ -8,7 +8,7 @@ from gym_trading_env.environments import TradingEnv
 import gymnasium as gym
 
 # Import your datas
-df = pd.read_csv("examples/data/BTC_USD-Hourly.csv", parse_dates=["date"], index_col= "date")
+df = pd.read_csv("data/BTC_USD-Hourly.csv", parse_dates=["date"], index_col= "date")
 df.sort_index(inplace= True)
 df.dropna(inplace= True)
 df.drop_duplicates(inplace=True)
@@ -52,4 +52,4 @@ while not done and not truncated:
     observation, reward, done, truncated, info = env.step(action)
     print(observation)
 # Save for render
-# env.save_for_render()
+env.save_for_render()
