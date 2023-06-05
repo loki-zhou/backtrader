@@ -1,5 +1,5 @@
 import sys  
-sys.path.append("./src")
+#sys.path.append("./src")
 
 import pandas as pd
 from gym_trading_env.renderer import Renderer
