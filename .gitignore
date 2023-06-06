@@ -71,3 +71,4 @@ datas/*.py
 .idea/
 
 render_logs
+monitor_log
