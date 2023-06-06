@@ -17,6 +17,10 @@ df.drop_duplicates(inplace=True)
 
 # Generating features
 # WARNING : the column names need to contain keyword 'feature' !
+df["feature_raw_close"] = df["close"]
+df["feature_raw_open"] = df["open"]
+df["feature_raw_low"] = df["low"]
+df["feature_raw_high"] = df["high"]
 df["feature_close"] = df["close"].pct_change()
 df["feature_open"] = df["open"]/df["close"]
 df["feature_high"] = df["high"]/df["close"]
@@ -42,7 +46,7 @@ def create_env():
             borrow_interest_rate= 0.0003/100, #per timestep (= 1h here)
             reward_function = reward_function,
             portfolio_initial_value = 1000, # in FIAT (here, USD)
-            # max_episode_duration = 500,
+            max_episode_duration = 2000,
             #max_episode_duration=500,
         )
     return env
@@ -56,7 +60,7 @@ def train():
     #model = PPO("MlpPolicy", env, verbose=1)
     model = RecurrentPPO("MlpLstmPolicy", env, verbose=1)
     callback = SaveOnBestTrainingRewardCallback(check_freq=10, log_dir=monitor_dir)
-    model.learn(total_timesteps=50_0000, callback=callback)
+    model.learn(total_timesteps=1000_0000, callback=callback)
 
 def test():
     model = PPO.load(monitor_dir + "best_model.zip")
@@ -72,5 +76,5 @@ def test():
     env.save_for_render(dir="./render_logs")
 
 if __name__ == '__main__':
-    #train()
-    test()
+    train()
+    #test()

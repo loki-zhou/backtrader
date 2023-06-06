@@ -3,9 +3,7 @@ import pandas as pd
 import numpy as np
 import gymnasium as gym
 from gym_trading_env.environments import TradingEnv
-from common import SaveOnBestTrainingRewardCallback
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3 import PPO
+
 
 df = pd.read_pickle("./data/raw/binance-BTCUSDT-5m.pkl")
 df["feature_close"] = df["close"]
@@ -41,23 +39,44 @@ monitor_dir = r'./monitor_log/'
 os.makedirs(monitor_dir, exist_ok=True)
 
 def train():
-    env = create_env()
-    env = Monitor(env, monitor_dir)
+    import ray
+    from ray import air, tune
+    from ray.rllib.algorithms.ppo import PPOConfig
 
-    model = PPO("MlpPolicy", env, verbose=1)
-    callback = SaveOnBestTrainingRewardCallback(check_freq=10, log_dir=monitor_dir)
-    model.learn(total_timesteps=500_0000, callback=callback)
+    ray.init()
+    env = create_env()
+    config = PPOConfig().environment(env=env).framework("torch").training(
+        lr= 0.0001,
+    )
+
+    tuner = tune.Tuner(
+        "PPO",
+        run_config=air.RunConfig(
+            stop={"episode_reward_mean": 100,
+                  "timesteps_total": 50_000},
+            checkpoint_config=air.CheckpointConfig(checkpoint_at_end=True),
+        ),
+        param_space=config,
+
+    )
+
+    results = tuner.fit()
+
+    ckpt = results.get_best_result(metric="episode_reward_mean", mode="max").checkpoint
+
+    print(ckpt)
 
 def test():
-    model = PPO.load(monitor_dir + "best_model.zip")
-    env = create_env()
-    done, truncated = False, False
-    observation, info = env.reset()
-    while not done and not truncated:
-        action, _states = model.predict(observation)
-        observation, reward, done, truncated, info = env.step(action)
-    env.save_for_render(dir="./render_logs")
+    pass
+    # model = PPO.load(monitor_dir + "best_model.zip")
+    # env = create_env()
+    # done, truncated = False, False
+    # observation, info = env.reset()
+    # while not done and not truncated:
+    #     action, _states = model.predict(observation)
+    #     observation, reward, done, truncated, info = env.step(action)
+    # env.save_for_render(dir="./render_logs")
 
 if __name__ == '__main__':
-    #train()
-    test()
+    train()
+    #test()
