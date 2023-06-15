@@ -22,16 +22,16 @@ df.drop_duplicates(inplace=True)
 
 # Generating features
 # WARNING : the column names need to contain keyword 'feature' !
-df["feature_raw_close"] = df["close"]
-df["feature_raw_open"] = df["open"]
-df["feature_raw_low"] = df["low"]
-df["feature_raw_high"] = df["high"]
-df["feature_raw_volume"] = df["volume"]
-# df["feature_close"] = df["close"].pct_change()
-# df["feature_open"] = df["open"]/df["close"]
-# df["feature_high"] = df["high"]/df["close"]
-# df["feature_low"] = df["low"]/df["close"]
-# df["feature_volume"] = df["volume"] / df["volume"].rolling(7*24).max()
+# df["feature_raw_close"] = df["close"]
+# df["feature_raw_open"] = df["open"]
+# df["feature_raw_low"] = df["low"]
+# df["feature_raw_high"] = df["high"]
+# df["feature_raw_volume"] = df["volume"]
+df["feature_close"] = df["close"].pct_change()
+df["feature_open"] = df["open"]/df["close"]
+df["feature_high"] = df["high"]/df["close"]
+df["feature_low"] = df["low"]/df["close"]
+df["feature_volume"] = df["volume"] / df["volume"].rolling(7*24).max()
 df.dropna(inplace= True)
 
 
@@ -54,12 +54,12 @@ def create_env():
             "TradingEnv",
             name= "BTCUSD",
             df = df,
-            # windows= 1,
+            windows= 15,
             positions = [ -1, -0.5, 0, 0.5, 1], # From -1 (=SHORT), to +1 (=LONG)
             # initial_position = 'random', #Initial position
             initial_position=0,  # Initial position
-            trading_fees = 0.01/100, # 0.01% per stock buy / sell
-            borrow_interest_rate= 0.0003/100, #per timestep (= 1h here)
+            trading_fees = 0.1/100, # 0.01% per stock buy / sell
+            borrow_interest_rate= 0, #per timestep (= 1h here)
             reward_function = reward_function,
             portfolio_initial_value = 10000, # in FIAT (here, USD)
             #max_episode_duration = 2400,
@@ -76,7 +76,7 @@ os.makedirs(monitor_dir, exist_ok=True)
 
 def train():
     env = create_env()
-    # model = PPO("MlpPolicy", env, verbose=1)
+    # model = PPO("MlpPolicy", env, verbose=1, batch_size=256)
     #model = QRDQN("MlpPolicy", env, verbose=1)
     model = RecurrentPPO("MlpLstmPolicy", env,
                          # batch_size=256,
@@ -92,12 +92,12 @@ def train():
         save_replay_buffer=True,
         save_vecnormalize=True,
     )
-    model.learn(total_timesteps=100_0000, callback=checkpoint_callback)
+    model.learn(total_timesteps=200_0000, callback=checkpoint_callback)
 
 def test():
     #model = QRDQN.load(monitor_dir + "rl_model_500000_steps.zip")
-    #model = PPO.load(monitor_dir + "rl_model_1000000_steps.zip")
-    model = RecurrentPPO.load(monitor_dir + "rl_model_860000_steps.zip")
+    model = PPO.load(monitor_dir + "rl_model_2000000_steps.zip")
+    #model = RecurrentPPO.load(monitor_dir + "rl_model_860000_steps.zip")
     env = create_env()
     done, truncated = False, False
     observation, info = env.reset()
@@ -111,5 +111,5 @@ def test():
     env.save_for_render(dir="./render_logs")
 
 if __name__ == '__main__':
-    #train()
-    test()
+    train()
+    #test()
