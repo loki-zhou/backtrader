@@ -113,5 +113,5 @@ def test():
     env.save_for_render(dir="./render_logs")
 
 if __name__ == '__main__':
-    #train()
-    test()
+    train()
+    #test()
