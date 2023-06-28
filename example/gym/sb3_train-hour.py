@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import pandas_ta as ta
 import numpy as np
 import gymnasium as gym
 from gym_trading_env.environments import TradingEnv
@@ -8,6 +9,7 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3 import PPO
 from sb3_contrib import RecurrentPPO
 from sb3_contrib import QRDQN
+from pandas_ta.statistics import zscore
 
 # Import your datas
 # df = pd.read_csv("data/BTC_USD-Hourly.csv", parse_dates=["date"], index_col= "date")
@@ -28,11 +30,26 @@ df.drop_duplicates(inplace=True)
 # df["feature_raw_low"] = df["low"]
 # df["feature_raw_high"] = df["high"]
 # df["feature_raw_volume"] = df["volume"]
-df["feature_close"] = df["close"].pct_change()
-df["feature_open"] = df["open"]/df["close"]
-df["feature_high"] = df["high"]/df["close"]
-df["feature_low"] = df["low"]/df["close"]
-df["feature_volume"] = df["volume"] / df["volume"].rolling(7*24).max()
+# df["feature_close"] = df["close"].pct_change()
+# df["feature_open"] = df["open"]/df["close"]
+# df["feature_high"] = df["high"]/df["close"]
+# df["feature_low"] = df["low"]/df["close"]
+# df["feature_volume"] = df["volume"] / df["volume"].rolling(7*24).max()
+
+df['feature_z_close'] = zscore(df['close'], length=30 )
+df['feature_z_open'] = zscore(df['open'], length=30 )
+df['feature_z_high'] = zscore(df['high'], length=30 )
+df['feature_z_low'] = zscore(df['low'], length=30 )
+df['feature_z_volume'] = zscore(df['volume'], length=30 )
+# CustomStrategy = ta.Strategy(
+#     name="Momo and Volatility",
+#     description="SMA 50,200, BBANDS, RSI, MACD and Volume SMA 20",
+#     ta=[
+#         {"kind": "cdl_z", "prefix": "feature"},
+#     ]
+# )
+# df.ta.cores = 0
+# df.ta.strategy(CustomStrategy)
 df.dropna(inplace= True)
 
 
@@ -55,7 +72,7 @@ def create_env():
             "TradingEnv",
             name= "BTCUSD",
             df = df,
-            windows= 15,
+            windows= 30,
             positions = [ -1, -0.5, 0, 0.5, 1], # From -1 (=SHORT), to +1 (=LONG)
             # initial_position = 'random', #Initial position
             initial_position=0,  # Initial position
@@ -69,7 +86,7 @@ def create_env():
     env.add_metric('Position Changes', lambda history : f"{ 100*np.sum(np.diff(history['position']) != 0)/len(history['position']):5.2f}%" )
     env.add_metric('Max Drawdown', max_drawdown)
     env = Monitor(env, monitor_dir)
-    env = gym.wrappers.NormalizeObservation(env)
+    #env = gym.wrappers.NormalizeObservation(env)
     # env = gym.wrappers.NormalizeReward(env)
     return env
 monitor_dir = r'./monitor_log/ppo/'
@@ -93,7 +110,7 @@ def train():
         save_replay_buffer=True,
         save_vecnormalize=True,
     )
-    model.set_parameters(monitor_dir + "rl_model_2000000_steps.zip")
+    #model.set_parameters(monitor_dir + "rl_model_2000000_steps.zip")
     model.learn(total_timesteps=200_0000, callback=checkpoint_callback)
 
 def test():
