@@ -3,17 +3,24 @@ import pandas as pd
 import numpy as np
 import gymnasium as gym
 from gym_trading_env.environments import TradingEnv
+import custom_indicator as cta
 
 def load_data():
-    df = pd.read_pickle("./data/binance-BTCUSDT-1h.pkl")
+    df = pd.read_csv("./data/BTC_USD-Hourly.csv", parse_dates=["date"], index_col="date")
     df.sort_index(inplace=True)
     df.dropna(inplace=True)
     df.drop_duplicates(inplace=True)
-    df["feature_close"] = df["close"].pct_change()
-    df["feature_open"] = df["open"] / df["close"]
-    df["feature_high"] = df["high"] / df["close"]
-    df["feature_low"] = df["low"] / df["close"]
-    df["feature_volume"] = df["volume"] / df["volume"].rolling(7 * 24).max()
+
+    # df = pd.read_pickle("./data/binance-BTCUSDT-1h.pkl")
+    # df.sort_index(inplace=True)
+    # df.dropna(inplace=True)
+    # df.drop_duplicates(inplace=True)
+    # df["feature_close"] = df["close"].pct_change()
+    # df["feature_open"] = df["open"] / df["close"]
+    # df["feature_high"] = df["high"] / df["close"]
+    # df["feature_low"] = df["low"] / df["close"]
+    # df["feature_volume"] = df["volume"] / df["volume"].rolling(7 * 24).max()
+    cta.NormalizedScore(df, 30)
     df.dropna(inplace=True)
     return df
 
@@ -32,12 +39,14 @@ def max_drawdown(history):
             _max_drawdown = drawdown
     return f"{_max_drawdown*100:5.2f}%"
 
+
+
 def create_env(config):
     df = load_data()
     env = TradingEnv(
         name="BTCUSD",
         df=df,
-        windows=15,
+        windows=30,
         positions=[-1, -0.5, 0, 0.5, 1],  # From -1 (=SHORT), to +1 (=LONG)
         # initial_position = 'random', #Initial position
         initial_position=0,  # Initial position
