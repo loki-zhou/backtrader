@@ -175,21 +175,37 @@ def pinbar(df: DataFrame, smi=None):
         df = smi_momentum(df)
         smi = df['feature_smi']
     
-    df['feature_pinbar_sell'] = (
+    # df['feature_pinbar_sell'] = (
+    #     (high < high.shift(1)) &
+    #     (close < high - (tr * 2 / 3)) &
+    #     (smi < smi.shift(1)) &
+    #     (smi.shift(1) > 40) &
+    #     (smi.shift(1) < smi.shift(2))
+    # )
+    df['feature_pinbar'] = 0
+    df.loc[(
         (high < high.shift(1)) &
         (close < high - (tr * 2 / 3)) &
         (smi < smi.shift(1)) &
         (smi.shift(1) > 40) &
         (smi.shift(1) < smi.shift(2))
-    )
+    ), 'feature_pinbar'] = -1
+    df.loc[(
+       (low > low.shift(1)) &
+       (close > low + (tr * 2 / 3)) &
+       (smi.shift(1) < -40) &
+       (smi > smi.shift(1)) &
+       (smi.shift(1) > smi.shift(2))
+    ), 'feature_pinbar'] = 1
 
-    df['feature_pinbar_buy'] = (
-        (low > low.shift(1)) &
-        (close > low + (tr * 2 / 3)) &
-        (smi.shift(1) < -40) &
-        (smi > smi.shift(1)) &
-        (smi.shift(1) > smi.shift(2))
-    )
+    #
+    # df['feature_pinbar_buy'] = (
+    #     (low > low.shift(1)) &
+    #     (close > low + (tr * 2 / 3)) &
+    #     (smi.shift(1) < -40) &
+    #     (smi > smi.shift(1)) &
+    #     (smi.shift(1) > smi.shift(2))
+    # )
     
     return df
 
