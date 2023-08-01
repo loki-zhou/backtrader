@@ -72,4 +72,6 @@ datas/*.py
 
 render_logs
 monitor_log
+run_results/
+wandb/
 
