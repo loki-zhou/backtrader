@@ -75,44 +75,55 @@ from ray.rllib.algorithms.ppo import PPOConfig
 #     "episode_reward_mean": args.stop_reward,
 # }
 
-stop = {
-    #"episode_reward_min": 500,
-    "episode_reward_mean": 5,
-}
+
 import ray
 from ray import tune, air
+from ray.rllib.utils.test_utils import check_learning_achieved
 
 def train():
     ray.init(num_cpus=4)
 
-
-    config = PPOConfig().environment(env="TradingEnv2",env_config = {
-    }).training(
-        gamma=0.99,
-        entropy_coeff=0.001,
-        num_sgd_iter=10,
-        vf_loss_coeff=1e-5,
-        model={
-            "use_attention": True,
-            "max_seq_len": 10,
-            "attention_num_transformer_units": 1,
-            "attention_dim": 32,
-            "attention_memory_inference": 10,
-            "attention_memory_training": 10,
-            "attention_num_heads": 1,
-            "attention_head_dim": 32,
-            "attention_position_wise_mlp_dim": 32,
+    configs = {
+        "PPO": {
+            "num_sgd_iter": 5,
+            "model": {
+                "vf_share_layers": True,
+            },
+            "vf_loss_coeff": 0.0001,
         },
+        "IMPALA": {
+            "num_workers": 2,
+            "num_gpus": 0,
+            "vf_loss_coeff": 0.01,
+        },
+    }
+
+    config = dict(
+        configs["PPO"],
+        **{
+            "env": "TradingEnv2",
+            # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
+            "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
+            "model": {
+                "use_lstm": True,
+                "lstm_cell_size": 256,
+                "lstm_use_prev_action": True,
+                "lstm_use_prev_reward": True,
+            },
+            "framework": "torch",
+            "_enable_learner_api": False,
+            "_enable_rl_module_api": False,
+        }
     )
 
-    tuner = tune.Tuner(
-        "PPO",
-        run_config=air.RunConfig(
-            stop={"episode_reward_mean": 5},
-            checkpoint_config=air.CheckpointConfig(checkpoint_at_end=True),
-        ),
-        param_space=config,
+    stop = {
+        # "training_iteration": args.stop_iters,
+        # "timesteps_total": args.stop_timesteps,
+        "episode_reward_mean": 5,
+    }
 
+    tuner = tune.Tuner(
+        "PPO", param_space=config, run_config=air.RunConfig(stop=stop, verbose=2)
     )
 
     results = tuner.fit()

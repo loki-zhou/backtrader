@@ -3,9 +3,11 @@ import pandas as pd
 import pandas_ta as ta
 import numpy as np
 import gymnasium as gym
+import gym_trading_env
 from gym_trading_env.environments import TradingEnv
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3 import PPO
 from sb3_contrib import RecurrentPPO
 from sb3_contrib import QRDQN
@@ -15,7 +17,7 @@ import custom_indicator as cta
 
 #  rsi   macd  cci  dx roc ultsoc   williams-R   obv  ht
 
-windows_size = 30
+windows_size = 50
 # Import your datas
 # df = pd.read_csv("data/BTC_USD-Hourly.csv", parse_dates=["date"], index_col= "date")
 # df.sort_index(inplace= True)
@@ -43,13 +45,13 @@ df.drop_duplicates(inplace=True)
 # df["feature_low"] = df["low"]/df["close"]
 # df["feature_volume"] = df["volume"] / df["volume"].rolling(7*24).max()
 
-df['feature_z_close'] = zscore(df['close'], length=windows_size )
-df['feature_z_open'] = zscore(df['open'], length=windows_size )
-df['feature_z_high'] = zscore(df['high'], length=windows_size )
-df['feature_z_low'] = zscore(df['low'], length=windows_size )
-df['feature_z_volume'] = zscore(df['volume'], length=windows_size )
+# df['feature_z_close'] = zscore(df['close'], length=windows_size )
+# df['feature_z_open'] = zscore(df['open'], length=windows_size )
+# df['feature_z_high'] = zscore(df['high'], length=windows_size )
+# df['feature_z_low'] = zscore(df['low'], length=windows_size )
+# df['feature_z_volume'] = zscore(df['volume'], length=windows_size )
 
-# cta.NormalizedScore(df, 30)
+cta.NormalizedScore(df, windows_size)
 
 # CustomStrategy = ta.Strategy(
 #     name="Momo and Volatility",
@@ -100,6 +102,9 @@ def max_drawdown(history):
         if drawdown < _max_drawdown:
             _max_drawdown = drawdown
     return f"{_max_drawdown*100:5.2f}%"
+
+monitor_dir = r'./monitor_log/ppo/'
+os.makedirs(monitor_dir, exist_ok=True)
 def create_env():
     env = gym.make(
             "TradingEnv",
@@ -111,7 +116,7 @@ def create_env():
             initial_position=0,  # Initial position
             trading_fees = 0.1/100, # 0.01% per stock buy / sell
             borrow_interest_rate= 0, #per timestep (= 1h here)
-            reward_function = reward_function,
+            reward_function = reward_sortino_function,  #reward_function,
             portfolio_initial_value = 10000, # in FIAT (here, USD)
             #max_episode_duration = 2400,
             #max_episode_duration=500,
@@ -120,14 +125,16 @@ def create_env():
     env.add_metric('Max Drawdown', max_drawdown)
     env = Monitor(env, monitor_dir)
     env = gym.wrappers.NormalizeObservation(env)
-    env = gym.wrappers.NormalizeReward(env)
+    # env = gym.wrappers.NormalizeReward(env)
     return env
-monitor_dir = r'./monitor_log/ppo/'
-os.makedirs(monitor_dir, exist_ok=True)
 
 def train():
-    env = create_env()
-    model = PPO("MlpPolicy", env, tensorboard_log="./tlog/ppo/", verbose=1, batch_size= 512)
+    # env = create_env(3)
+    # training_envs = gym.vector.SyncVectorEnv(
+    #     [lambda: create_env() for _ in range(5)])
+    training_envs = create_env()
+    model = PPO("MlpPolicy", training_envs, tensorboard_log="./tlog/ppo/", verbose=1, batch_size= 512)
+    # model = PPO("MlpPolicy", training_envs, verbose=1, batch_size=512)
     #model = QRDQN("MlpPolicy", env, verbose=1)
     # model = RecurrentPPO("MlpLstmPolicy", env,
     #                      batch_size=512,
@@ -144,14 +151,16 @@ def train():
         save_replay_buffer=True,
         save_vecnormalize=True,
     )
-    # model.set_parameters(monitor_dir + "rl_model_2000000_steps.zip")
+    model.set_parameters(monitor_dir + "rl_model_20000000_steps.zip")
     model.learn(total_timesteps=200_0000, callback=checkpoint_callback)
+    # model.learn(total_timesteps=200_0000)
 
 def test():
     #model = QRDQN.load(monitor_dir + "rl_model_500000_steps.zip")
     model = PPO.load(monitor_dir + "rl_model_2000000_steps.zip")
     # model = RecurrentPPO.load(monitor_dir + "rl_model_2000000_steps.zip")
     env = create_env()
+    model.set_env(env)
     done, truncated = False, False
     observation, info = env.reset()
     lstm_states = None
@@ -165,5 +174,5 @@ def test():
 
 # tensorboard.exe --logdir example/gym/tlog/ppo
 if __name__ == '__main__':
-    # train()
-    test()
+    train()
+    # test()

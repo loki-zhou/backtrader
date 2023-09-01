@@ -11,16 +11,17 @@ from gym_trading_env.downloader import download
 
 
 
-download(
-    exchange_names = ["binance"],
-    symbols= ["BTC/USDT"],
-    timeframe= "30m",
-    dir = "examples/data",
-    since= datetime.datetime(year= 2019, month= 1, day=1),
-)
+# download(
+#     exchange_names = ["binance"],
+#     symbols= ["BTC/USDT"],
+#     timeframe= "30m",
+#     dir = "examples/data",
+#     since= datetime.datetime(year= 2019, month= 1, day=1),
+# )
 
 # Import your datas
-df = pd.read_pickle("examples/data/binance-BTCUSDT-30m.pkl")
+# df = pd.read_pickle("examples/data/binance-BTCUSDT-30m.pkl")
+df = pd.read_pickle("./data/binance-BTCUSDT-1h.pkl")
 df.sort_index(inplace= True)
 df.dropna(inplace= True)
 df.drop_duplicates(inplace=True)
@@ -34,7 +35,7 @@ df["feature_low"] = df["low"]/df["close"]
 df["feature_volume"] = df["volume"] / df["volume"].rolling(7*24).max()
 df.dropna(inplace= True)
 
-del df["timestamp_open"]
+# del df["timestamp_open"]
 
 
 def reward_function(history):

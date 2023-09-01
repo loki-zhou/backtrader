@@ -29,20 +29,20 @@ from pandas import DataFrame
 import pandas as pd
 
 
-def NormalizedScore(df: DataFrame, length=30):
-    ll = df['low'].rolling(window=length).min()
-    hh = df['high'].rolling(window=length).max()
-    vll = df['volume'].rolling(window=length).min()
-    vhh = df['volume'].rolling(window=length).max()
-    scale = hh - ll
-    vscale = vhh - vll
-
-    df['feature_normal_open'] = (df['open'] - ll)/scale
-    df['feature_normal_low'] = (df['low'] - ll) / scale
-    df['feature_normal_high'] = (df['high'] - ll) / scale
-    df['feature_normal_close'] = (df['close'] - ll) / scale
-    df['feature_normal_volume'] = (df['volume']-vll)/vscale
-    return
+# def NormalizedScore(df: DataFrame, length=30):
+#     ll = df['low'].rolling(window=length).min()
+#     hh = df['high'].rolling(window=length).max()
+#     vll = df['volume'].rolling(window=length).min()
+#     vhh = df['volume'].rolling(window=length).max()
+#     scale = hh - ll
+#     vscale = vhh - vll
+#
+#     df['feature_normal_open'] = (df['open'] - ll)/scale
+#     df['feature_normal_low'] = (df['low'] - ll) / scale
+#     df['feature_normal_high'] = (df['high'] - ll) / scale
+#     df['feature_normal_close'] = (df['close'] - ll) / scale
+#     df['feature_normal_volume'] = (df['volume']-vll)/vscale
+#     return
 
 
 def NormalizedScore(df: DataFrame, length=30):
@@ -63,5 +63,5 @@ def NormalizedScore(df: DataFrame, length=30):
 
 if __name__ == '__main__':
     df = pd.read_pickle("./data/raw/binance-BTCUSDT-5m.pkl")
-    dataframe = NormalizedScore(df)
-    print(dataframe)
+    NormalizedScore(df)
+    print(df)
