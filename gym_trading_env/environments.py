@@ -305,7 +305,8 @@ class TradingEnv(gym.Env):
         history_df.set_index("date", inplace= True)
         history_df.sort_index(inplace = True)
         render_df = self.df.join(history_df, how = "inner")
-        
+        if "date" in render_df.columns:
+            render_df.set_index("date", inplace=True)
         if not os.path.exists(dir):os.makedirs(dir)
         render_df.to_pickle(f"{dir}/{self.name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.pkl")
 

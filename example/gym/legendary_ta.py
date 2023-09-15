@@ -344,31 +344,31 @@ def populate_leledc_major_minor(dataframe, maj_qual, min_qual, maj_len, min_len)
     dataframe['leledc_minor'] = 0
 
     for i in range(1, len(dataframe)):
-        close = dataframe['close'][i]
+        close = dataframe['close'].iloc[i]
         short_length = i if i < 4 else 4
 
-        if close > dataframe['close'][i - short_length]:
+        if close > dataframe['close'].iloc[i - short_length]:
             bindex_maj += 1
             bindex_min += 1
-        elif close < dataframe['close'][i - short_length]:
+        elif close < dataframe['close'].iloc[i - short_length]:
             sindex_maj += 1
             sindex_min += 1
 
         update_major = False
-        if bindex_maj > maj_qual[i] and close < dataframe['open'][i] and dataframe['high'][i] >= dataframe['high'][i - maj_len:i].max():
+        if bindex_maj > maj_qual[i] and close < dataframe['open'].iloc[i] and dataframe['high'].iloc[i] >= dataframe['high'].iloc[i - maj_len:i].max():
             bindex_maj, trend_maj, update_major = 0, 1, True
-        elif sindex_maj > maj_qual[i] and close > dataframe['open'][i] and dataframe['low'][i] <= dataframe['low'][i - maj_len:i].min():
+        elif sindex_maj > maj_qual[i] and close > dataframe['open'].iloc[i] and dataframe['low'].iloc[i] <= dataframe['low'].iloc[i - maj_len:i].min():
             sindex_maj, trend_maj, update_major = 0, -1, True
 
-        dataframe.at[i, 'leledc_major'] = trend_maj if update_major else np.nan if trend_maj == 0 else trend_maj
-        if bindex_min > min_qual[i] and close < dataframe['open'][i] and dataframe['high'][i] >= dataframe['high'][i - min_len:i].max():
+        dataframe.iloc[i]['leledc_major'] = trend_maj if update_major else np.nan if trend_maj == 0 else trend_maj
+        if bindex_min > min_qual[i] and close < dataframe['open'].iloc[i] and dataframe['high'].iloc[i] >= dataframe['high'].iloc[i - min_len:i].max():
             bindex_min = 0
-            dataframe.at[i, 'leledc_minor'] = -1
-        elif sindex_min > min_qual[i] and close > dataframe['open'][i] and dataframe['low'][i] <= dataframe['low'][i - min_len:i].min():
+            dataframe.iloc[i]['leledc_minor'] = -1
+        elif sindex_min > min_qual[i] and close > dataframe['open'].iloc[i] and dataframe['low'].iloc[i] <= dataframe['low'].iloc[i - min_len:i].min():
             sindex_min = 0
-            dataframe.at[i, 'leledc_minor'] = 1
+            dataframe.iloc[i]['leledc_minor'] = 1
         else:
-            dataframe.at[i, 'leledc_minor'] = 0
+            dataframe.iloc[i]['leledc_minor'] = 0
 
     return dataframe
 

@@ -27,6 +27,7 @@ plotcandle(dyno,dynh,dynl,dync,title="Candle",color=color==1?green:red)
 '''
 from pandas import DataFrame
 import pandas as pd
+import numpy as np
 
 
 # def NormalizedScore(df: DataFrame, length=30):
@@ -59,6 +60,29 @@ def NormalizedScore(df: DataFrame, length=30):
     df['feature_normal_close'] = (df['close'] - ll) / scale
     df['feature_normal_volume'] = (df['volume']-vll)/vscale
     return
+
+
+def SMI(df: DataFrame, k_length=9, d_length=3):
+    """
+    The Stochastic Momentum Index (SMI) Indicator was developed by
+    William Blau in 1993 and is considered to be a momentum indicator
+    that can help identify trend reversal points
+
+    :return: DataFrame with smi column populated
+    """
+
+    ll = df['low'].rolling(window=k_length).min()
+    hh = df['high'].rolling(window=k_length).max()
+
+    diff = hh - ll
+    rdiff = df['close'] - (hh + ll) / 2
+
+    avgrel = rdiff.ewm(span=d_length).mean().ewm(span=d_length).mean()
+    avgdiff = diff.ewm(span=d_length).mean().ewm(span=d_length).mean()
+
+    df['feature_smi'] = np.where(avgdiff != 0, avgrel / (avgdiff / 2), 0)
+
+    return df
 
 
 if __name__ == '__main__':
