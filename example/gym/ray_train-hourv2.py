@@ -249,7 +249,7 @@ def test():
             prev_a = a
             prev_r = reward
     env.save_for_render(dir="./render_logs")
-
+//ray                        2.4.0
 if __name__ == '__main__':
     train()
     # test()
