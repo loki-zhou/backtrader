@@ -44,9 +44,11 @@ CustomStrategy = ta.Strategy(
 
 def load_data():
     # df = ak.stock_zh_a_daily("sz000625", start_date="20200101")
+    df = pd.read_csv("./data/BTC-15m.csv", parse_dates=["date"], index_col="date")
+    df = df.tz_localize(None)
     # df = ak.stock_zh_a_daily("sh601318", start_date="20200101")
     # df.set_index("date")
-    df = pd.read_pickle("./data/binance-BTCUSDT-1h.pkl")
+    # df = pd.read_pickle("./data/binance-BTCUSDT-1h.pkl")
     # df = pd.read_csv("./data/BTC_USD-Hourly.csv", parse_dates=["date"], index_col="date")
     df.sort_index(inplace=True)
     df.dropna(inplace=True)
@@ -110,8 +112,10 @@ def create_env(config):
         df=df,
         windows=1,
         # positions=[-1, -0.5, 0, 0.5, 1],  # From -1 (=SHORT), to +1 (=LONG)
-        positions=[0, 0.5, 1],  # From -1 (=SHORT), to +1 (=LONG)
+        # positions=[0, 0.5, 1],  # From -1 (=SHORT), to +1 (=LONG)
+        positions=[0,  1],  # From -1 (=SHORT), to +1 (=LONG)
         # initial_position = 'random', #Initial position
+        dynamic_feature_functions=[],
         initial_position=0,  # Initial position
         trading_fees=0.1 / 100,  # 0.01% per stock buy / sell
         borrow_interest_rate=0,  # per timestep (= 1h here)
@@ -228,7 +232,7 @@ from ray.rllib.algorithms.algorithm import Algorithm
 
 def test():
     # checkpoint_path = r"D:\rl\backtrader\example\gym\ray_results\PPO\PPO_TradingEnv2_1ab4e_00000_0_2023-09-13_18-34-23\checkpoint_000612"
-    checkpoint_path = r"D:\rl\backtrader\example\gym\ray_results\PPO\PPO_TradingEnv2_1d0a4_00000_0_2023-09-18_17-31-15\checkpoint_003910"
+    checkpoint_path = r"D:\rl\backtrader\example\gym\ray_results\PPO\PPO_TradingEnv2_23578_00000_0_2023-09-19_17-44-33\checkpoint_002540"
 
     algo = Algorithm.from_checkpoint(checkpoint_path)
     env = create_env(0)
